@@ -9,6 +9,7 @@ public class Grid : MonoBehaviour
     {
         EMPTY,
         NORMAL,
+        BUBBLE,
         //how many piecetypes there are
         COUNT,
     };
@@ -24,6 +25,9 @@ public class Grid : MonoBehaviour
     public int xDim;
     public int yDim;
 
+    //time between calls to FillStep
+    public float fillTime;
+
     //have an array of struct which can be edited in the inspector
     public PiecePrefab[] piecePrefabs;
     public GameObject backgroundPrefab;
@@ -33,6 +37,8 @@ public class Grid : MonoBehaviour
 
     //2D array of game objects
     private GamePiece[,] pieces;
+
+    private bool inverse = false;
 
     // Use this for initialization
     void Start()
@@ -68,7 +74,19 @@ public class Grid : MonoBehaviour
             }
         }
 
-        Fill();
+        Destroy(pieces[4, 4].gameObject);
+        SpawnNewPiece(4, 4, PieceType.BUBBLE);
+
+        Destroy(pieces[1, 4].gameObject);
+        SpawnNewPiece(1, 4, PieceType.BUBBLE);
+
+        Destroy(pieces[5, 4].gameObject);
+        SpawnNewPiece(5, 4, PieceType.BUBBLE);
+
+        Destroy(pieces[8, 4].gameObject);
+        SpawnNewPiece(8, 4, PieceType.BUBBLE);
+
+        StartCoroutine(Fill());
     }
 
     // Update is called once per frame
@@ -104,8 +122,15 @@ public class Grid : MonoBehaviour
         //-2 since we don't care about the bottom row since they cant be moved down, remember 0 is at the top
         for (int y = yDim - 2; y >= 0; y--)
         {
-            for (int x = 0; x < xDim; x++)
+            for (int loopX = 0; loopX < xDim; loopX++)
             {
+                //if not inverted
+                int x = loopX;
+                //if inverted
+                if (inverse)
+                {
+                    x = xDim - 1 - loopX;
+                }
                 //Get the game piece at the current position and check if it's movable
                 GamePiece piece = pieces[x, y];
 
@@ -115,12 +140,64 @@ public class Grid : MonoBehaviour
 
                     if (pieceBelow.Type == PieceType.EMPTY)
                     {
+                        Destroy(pieceBelow.gameObject);
                         //Swapping a movable piece with an empty piece
-                        piece.MovableComponent.Move(x, y + 1);
+                        piece.MovableComponent.Move(x, y + 1, fillTime);
                         pieces[x, y + 1] = piece;
                         //Have to now make the piece above it empty since it moved down
                         SpawnNewPiece(x, y, PieceType.EMPTY);
                         movedPiece = true;
+                    }
+                    else
+                    {
+                        //move Diagnally
+                        for(int diag = -1; diag <= 1; diag++)
+                        {
+                            if(diag != 0)
+                            {
+                                //x coordinate of our diagonal piece
+                                int diagX = x + diag;
+
+                                if (inverse)
+                                {
+                                    diagX = x - diag;
+                                }
+
+                                if(diagX >= 0 && diagX < xDim)
+                                {
+                                    GamePiece diagonalPiece = pieces[diagX, y + 1];
+
+                                    if(diagonalPiece.Type == PieceType.EMPTY)
+                                    {
+                                        bool hasPieceAbove = true;
+
+                                        for(int aboveY = y; aboveY >= 0; aboveY--)
+                                        {
+                                            GamePiece pieceAbove = pieces[diagX, aboveY];
+                                            if (pieceAbove.IsMovable())
+                                            {
+                                                break;
+                                            }
+                                            else if (!pieceAbove.IsMovable() && pieceAbove.Type != PieceType.EMPTY)
+                                            {
+                                                hasPieceAbove = false;
+                                                break;
+                                            }
+                                        }
+
+                                        if (!hasPieceAbove)
+                                        {
+                                            Destroy(diagonalPiece.gameObject); ;
+                                            piece.MovableComponent.Move(diagX, y + 1, fillTime);
+                                            pieces[diagX, y + 1] = piece;
+                                            SpawnNewPiece(x, y, PieceType.EMPTY);
+                                            movedPiece = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -133,13 +210,15 @@ public class Grid : MonoBehaviour
 
             if (pieceBelow.Type == PieceType.EMPTY)
             {
+                //Destroy the piece below before moving into it
+                Destroy(pieceBelow.gameObject);
                 //The new piece in the -1 row, (the row above the top row)
                 GameObject newPiece = (GameObject)Instantiate(piecePrefableDict[PieceType.NORMAL], GetWorldPosition(x, -1), Quaternion.identity);
                 newPiece.transform.parent = transform;
 
                 pieces[x, 0] = newPiece.GetComponent<GamePiece>();
                 pieces[x, 0].Init(x, -1, this, PieceType.NORMAL);
-                pieces[x, 0].MovableComponent.Move(x, 0);
+                pieces[x, 0].MovableComponent.Move(x, 0, fillTime);
                 pieces[x, 0].ColourComponent.SetColour((ColourPiece.ColourType)Random.Range(0, pieces[x, 0].ColourComponent.NumColours));
                 movedPiece = true;
             }
@@ -149,11 +228,12 @@ public class Grid : MonoBehaviour
     }
 
         //Call this function until all the board is filled
-        public void Fill()
+        public IEnumerator Fill()
     {
         while (FillStep())
         {
-
+            inverse = !inverse;
+            yield return new WaitForSeconds(fillTime);
         }
     }
 
