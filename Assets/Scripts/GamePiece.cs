@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class GamePiece : MonoBehaviour {
+public class GamePiece : MonoBehaviour
+{
     private int x;
     private int y;
 
@@ -11,7 +12,7 @@ public class GamePiece : MonoBehaviour {
         get { return x; }
         set
         {
-            if(isMovable())
+            if (IsMovable())
             {
                 x = value;
             }
@@ -23,7 +24,7 @@ public class GamePiece : MonoBehaviour {
         get { return y; }
         set
         {
-            if (isMovable())
+            if (IsMovable())
             {
                 y = value;
             }
@@ -39,7 +40,7 @@ public class GamePiece : MonoBehaviour {
 
     private Grid grid;
 
-    public Grid gridRef
+    public Grid GridRef
     {
         get { return grid; }
     }
@@ -51,20 +52,30 @@ public class GamePiece : MonoBehaviour {
         get { return movableComponent; }
     }
 
+    private ColourPiece colourComponent;
+
+    public ColourPiece ColourComponent
+    {
+        get { return colourComponent; }
+    }
+
     void Awake()
     {
         movableComponent = GetComponent<MovablePiece>();
+        colourComponent = GetComponent<ColourPiece>();
     }
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+    // Use this for initialization
+    void Start()
+    {
+
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+
+    }
 
     //to be able to initialise some of these variables
     public void Init(int _x, int _y, Grid _grid, Grid.PieceType _type)
@@ -75,8 +86,14 @@ public class GamePiece : MonoBehaviour {
         type = _type;
     }
 
-    public bool isMovable()
+    public bool IsMovable()
     {
         return movableComponent != null;
+    }
+
+    //Check if a piece coloured or not
+    public bool IsColoured()
+    {
+        return colourComponent != null;
     }
 }

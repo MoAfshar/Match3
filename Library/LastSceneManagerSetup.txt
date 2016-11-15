@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/Scenes/MainScene.unity
+- path: C:/Users/Mo/Desktop/Match3Game/Files/Ch01/01_06/Unity Project/Assets/Scenes/MainScene.unity
   isLoaded: 1
   isActive: 1
