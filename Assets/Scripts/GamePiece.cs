@@ -86,6 +86,24 @@ public class GamePiece : MonoBehaviour
         type = _type;
     }
 
+    //Mouse is pressed inside an element (For VR when it is touched)
+    void OnMouseDown()
+    {
+        grid.PressPiece(this); //"this" is a refrence to this gamepiece component.
+    }
+
+    //When mouse is hovered (For VR it would be when touch is released)
+    void OnMouseUp()
+    {
+        grid.ReleasePiece();
+    }
+
+    //When mouse enters an element
+    void OnMouseEnter()
+    {
+        grid.EnterPiece(this);
+    }
+
     public bool IsMovable()
     {
         return movableComponent != null;
