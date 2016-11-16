@@ -29,8 +29,8 @@ public class ClearablePiece : MonoBehaviour {
 	void Update () {
 	
 	}
-
-	public void Clear()
+    //to be able to ovveride Clear
+	public virtual void Clear()
 	{
 		isBeingCleared = true;
 		StartCoroutine (ClearCoroutine ());
